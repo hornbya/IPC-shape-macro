@@ -2,9 +2,9 @@
 
 //PURPOSE: This macro will measure the sizes and shapes of constituent components, or phases (e.g. crystals, glass) within each particle in an image containing multi-component particles. Components are linked to the host particle, which is described using the same parameters.
 
-//REQUIREMENTS: The Shape Filter ImageJ plugin (see above), an 'original' image containing multicomponent particles and a folder containing component image files, where each image is thresholded to show a single component present in the 'original' image.
+//REQUIREMENTS: The Shape Filter ImageJ plugin (see above), an 'original' image containing multicomponent particles and a folder containing component image files, where each image shows a single component present in the 'original' image.
 
-//INPUTS: this macro requires an "original" image showing particle shapes, and a set of images with the same dimensions as the original binary image that have been thresholded to only show a single component (or phase). Single phase image files should have descriptive titles (e.g. "Plagioclase") and should be saved in a dedicated folder prior to running the macro. If the original image and phase stack images are not binary when uploaded, the macro will convert them. This will not affect any images that are already binary.
+//INPUTS: this macro requires an "original" image showing particles, and one or more images with the same dimensions as the original binary image that have been thresholded or segmented to only show a single component (or phase). Single phase image files should be prefixed by a number followed by a descriptive title and should be saved in a dedicated folder prior to running the macro. If the original image and phase stack images are not binary when uploaded, the macro will convert them. This will not affect any images that are already binary.
 
 //OUTPUTS: CSV text file containing following parameters for particles and one or multiple components: Label(slice), Area, Perimeter, Convex hull (CH) area, Convex hull (CH) perimeter, Solidity, Convexity, Concavity Index, Form Factor, Circularity, Roundness, Axial ratio (Feret), Feret diameter, Minimum Feret diameter, Maximum inscribed circle diameter, orientation and ROI Index.
 
