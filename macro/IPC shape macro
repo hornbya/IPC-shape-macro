@@ -2,7 +2,7 @@ Dialog.create("Full image");
 Dialog.addMessage("Open original image containing all phases");
 Dialog.addCheckbox("Binary image?", 0);
 Dialog.show();
-open(); // Open 'original' image to be analysed
+open();
 original = getTitle();
 run("8-bit");
 binary = Dialog.getCheckbox();
