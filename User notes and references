@@ -1,0 +1,46 @@
+Shape parameters are calculated for both particles and components using an ImageJ macro, which allows the calculation of the shape parameters of particles and multiple intra-particle components (e.g. crystals, vesicles) from sectorized (single-component) images of a sample, linking the components’ results to their host particles. The macro uses shape definitions largely derived from Liu et al. 2015 (see Table 2), but the macro calls on the Shape Filter plugin (Wagner and Lipinski 2013), freely available from the Biomedgroup update site within ImageJ, to conduct the measurements rather than the native Analyze Particles function. The Shape Filter plugin uses connected contour labelling and 8-connected contour tracing (Chang et al. 2004); 8-connected contour calculations allow pixels to be connected to any of the 8 surrounding pixels in a 3x3 grid, with 4 pixels connected orthogonally and 4 pixels connected diagonally. Perimeter measurements are made by conversion to 8-connected Chain Code (Freeman et al. 1961) with correction factors to orthogonal and diagonal distances of 0.948 and 1.340 respectively. These correction factors, calculated by Profitt and Rosen 1979, reduce the mean error for chain code measurements on lines of infinite length at any orientation.  This is one of several approaches to minimising error in measuring a linear distance between pixels in a raster (Fatemi et al 2016). The Shape Filter perimeter measurements represent a significant improvement on perimeter measurements made using the Analyze Particles function.
+
+The macro first measures particle in an image, including holes in the particles. The image is converted to binary, and a dialogue box prompts the user for pixel scale and the minimum particle area (particles under this size are ignored). The pixel dimensions minimum particle size in pixels are requested. The particle dimensions and shape parameters are measured and outlines are added the ROI manager. The macro then prompts the user to load single-component images (these can be loaded as an image stack for multiple components, e.g. vesicles and crystals). All images in a containing folder are loaded at this stage. The components are measured sequentially within each ROI, so that components’ results refer to the ‘parent’ particle (the ROI index in the results). A user prompt is generated for minimum phase area, which was set to 10 pixels in this study. The macro runs the Shape Filter plugin, before calculation of shape factors from the major dimensions of particle components and their respective reference shapes (e.g. convex hull), following the method in Table 2. The results were plotted in box-plot diagrams as a function of ϕ, here calculated based on the Feret’s diameter. For the bubble analyzes we have considered the results from fragments with a minimum of 50 bubbles.
+
+Table 1. Description of terms and abbreviations used.
+-----------------------------------------------------
+A	    Area
+ACH 	Convex hull area
+P 	  Perimeter
+PCH 	Convex hull perimeter
+Dmax	Max. Feret diameter
+Dmin	Min. Feret diameter
+AR  	Axial ratio (Feret)
+Dc  	Equivalent-area circle diameter
+Ω	    Dmax in Phi = -log_2⁡〖D_c/1000〗
+SLD	  Solidity
+CVX	  Convexity
+RND	  Roundness
+CRC	  Circularity
+FMF	  Form factor
+CCL	  Chain code length
+
+
+Table 2. Description of macro outputs, parameter calculations and references.
+-----------------------------------------------------------------------------
+Title	           Calculation	          References – notes
+Label		                                File name of image slice
+Area	            Pixel count	          Wagner and Lipinski (2013)
+Perim.	         0.948(orthogonal CCL) 
+                  +1.34(diagonal CCL)	  Freeman 1961, Proffitt and Rosen 1979
+CH Area	          A_CH (pixel count)	  Wagner and Lipinski (2013)
+CH Perim.       	P_CH	                Wagner and Lipinski (2013)
+Solidity    	    A/A_CH 	              1 = fully convex
+Convexity     	  P_CH/P	              1= fully convex
+Concavity Index	  √((1-〖SLD〗^2 )
+                  +(1-〖CVX〗^2))	      Liu et al. 2015; 0 = fully convex
+Form Factor       
+(Cox Circularity) 4π A/P^2  	          Heilbronner and Barrett 2014; Bagheri et al. 2015; 1 = fully circular
+Circularity	      P/2(√πA)            	Heilbronner and Barrett 2014; 1 = fully circular
+Roundness       	4A/〖μD_max〗^2     	Liu et al 2015; Pons et al. 1999. 1 = fully round
+AR Feret	        D_min/D_max 	
+Feret d	          D_max                 https://github.com/bkiers/RotatingCalipers
+MinFeret d	      D_min                	https://github.com/bkiers/RotatingCalipers
+Max. Insc.
+Circle Diam.		                        Wagner and Lipinski (2013)
+ROI Index		                            Particles labelled L-R and top to bottom
