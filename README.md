@@ -1,5 +1,5 @@
 <a href="https://doi.org/10.5281/zenodo.1438433"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.1438433.svg" alt="DOI"></a>
-# IPC-shape-macro
+# IPC shape macro
 ImageJ macro to measure the size and shape parameters of particles and multiple components within particles
 
 PURPOSE: This macro will measure the sizes and shapes of constituent components, or phases (e.g. crystals, glass) within each particle in an image containing multi-component particles. Components are linked to the host particle, which is described using the same parameters.
