@@ -1,0 +1,222 @@
+//ImageJ macro to measure the size and shape parameters of particles and multiple components within particles
+
+//PURPOSE: This macro will measure the sizes and shapes of constituent components, or phases (e.g. crystals, glass) within each particle in an image containing multi-component particles. Components are linked to the host particle, which is described using the same parameters.
+
+//REQUIREMENTS: The Shape Filter ImageJ plugin (see above), an 'original' image containing multicomponent particles and a folder containing component image files, where each image is thresholded to show a single component present in the 'original' image.
+
+//INPUTS: this macro requires an "original" image showing particle shapes, and a set of images with the same dimensions as the original binary image that have been thresholded to only show a single component (or phase). Single phase image files should have descriptive titles (e.g. "Plagioclase") and should be saved in a dedicated folder prior to running the macro. If the original image and phase stack images are not binary when uploaded, the macro will convert them. This will not affect any images that are already binary.
+
+//OUTPUTS: CSV text file containing following parameters for particles and one or multiple components: Label(slice), Area, Perimeter, Convex hull (CH) area, Convex hull (CH) perimeter, Solidity, Convexity, Concavity Index, Form Factor, Circularity, Roundness, Axial ratio (Feret), Feret diameter, Minimum Feret diameter, Maximum inscribed circle diameter, orientation and ROI Index.
+
+//ACKNOWLEDGEMENTS: The macro calls on the Shape Filter ImageJ plugin (https://doi.org/10.5281/zenodo.57880) based on IJBlob, which is described in Wagner, T and Lipinski, H 2013. IJBlob: An ImageJ Library for Connected Component Analysis and Shape Analysis. Journal of Open Research Software 1(1):e6, The plugin description is available from https://imagej.net/Shape_Filter and is freely and openly available by subscribing to the Biomedgroup update site in ImageJ (see https://imagej.net/Update_Sites)
+
+//This macro also incorporates shape parameters described in Liu, E.J., et al (2015). Optimising Shape Analysis to quantify volcanic ash morphology. GeoResJ, https://doi.org/10.1016/j.grj.2015.09.001 and code from shape macro, with kind permission from Emma Liu. The macro is freely and openly available in the Supplementary Materials and here: https://data.bris.ac.uk/datasets/wgxxhae8ptdc1he0g2cqq0q1i/Appendix_ShapeAnalysisMACRO.txt
+
+Dialog.create("Full image");
+Dialog.addMessage("Open original image containing all phases");
+Dialog.addCheckbox("Binary image?", 0);
+Dialog.show();
+open(); // Open 'original' image to be analysed
+original = getTitle();
+run("8-bit");
+binary = Dialog.getCheckbox();
+if (binary==true) 
+	setThreshold(128, 255);
+else setThreshold(0, 254);
+run("Convert to Mask", "method=Default background=light");
+Dialog.create("Enter scale values");
+Dialog.addNumber("Pixels", 1);
+Dialog.addNumber("...per known measurement length", 1);
+Dialog.addString("Measurement units ", "um");
+Dialog.show();
+pixelLength = Dialog.getNumber();
+knownLength = Dialog.getNumber();
+distanceUnits = Dialog.getString();
+run("Set Scale...", "distance=&pixelLength known=&knownLength unit=&distanceUnits");	
+Dialog.create("Particle measurement options");
+Dialog.addNumber("Minimum particle area to be measured (in pixels)", 100);
+Dialog.show();
+minParea = Dialog.getNumber();
+setBatchMode(true);
+run("Clear Results");
+run("Analyze Particles...", "size=minParea-Infinity pixel show=Masks add");
+masks=getTitle();
+imageCalculator("AND create", original, masks);
+sieved=getTitle();
+selectWindow(original);
+close();
+selectWindow(sieved);
+
+run("Invert");
+run("Clear Results"); 
+run("Shape Filter", "area=0-Infinity area_convex_hull=0-Infinity perimeter=0-Infinity perimeter_convex_hull=0-Infinity feret_diameter=0-Infinity min._feret_diameter=0-Infinity max._inscr._circle_diameter=0-Infinity area_eq._circle_diameter=0-Infinity long_side_min._bounding_rect.=0-Infinity short_side_min._bounding_rect.=0-Infinity aspect_ratio=1-Infinity area_to_perimeter_ratio=0-Infinity circularity=0-Infinity elongation=0-1 convexity=0-1 solidity=0-1 num._of_holes=0-Infinity thinnes_ratio=0-1 contour_temperatur=0-1 orientation=0-180 fractal_box_dimension=0-2 option->box-sizes=2,3,4,6,8,12,16,32,64 draw_holes fill_results_table exclude_on_edges");
+
+n = nResults;
+label1 = newArray(n); //add label to the first column to identify the slice (or phase) from the stack for each row of results
+area1 = newArray(n); 
+length1 = newArray(n); 
+area2 = newArray(n); 
+length2 = newArray(n);
+ff1 = newArray(n);
+feret1 = newArray(n); 
+minferet1 = newArray(n);
+incircdiam1 = newArray(n);
+orientation1 = newArray(n);
+roiLabel1 = newArray(n);
+
+for (i = 0; i<n; i++) {
+	label1[i] = getResult('Frame', i);
+	orientation1[i] = getResult('Orientation', i); 
+	length1[i] = getResult('Peri.', i);
+	area1[i] = getResult('Area', i);
+	area2[i] = getResult('Area Conv. Hull', i);
+	length2[i] = getResult('Peri. Conv. Hull', i);
+	ff1[i] = getResult('Thinnes Rt.', i);
+	feret1[i] = getResult('Feret', i);
+	minferet1[i] = getResult('Min. Feret', i);
+	incircdiam1[i] = getResult('Maximum inscriped circle diameter', i);
+	roiLabel1[i] = getResultLabel(i);
+}
+
+run("Clear Results"); 
+for (i = 0; i<n; i++) { 
+	setResult("Label", i, label1[i]);
+	setResult("Area", i, area1[i]);
+	setResult("Perim.", i, length1[i]); 
+	setResult("CH Area", i, area2[i]); 
+	setResult("CH Perim.", i, length2[i]); 
+	setResult("Solidity", i, area1[i]/area2[i]); 
+	setResult("Convexity", i, length2[i]/length1[i]); 
+	setResult("Concavity Index", i, sqrt((pow(1-(area1[i]/area2[i]),2)+(pow(1-(length2[i]/length1[i]),2))))); 
+	setResult("FormFactor", i, ff1[i]);
+	setResult("Circularity", i, length1[i]/(2*sqrt(PI*area1[i])));
+	setResult("Roundness", i, 4*area1[i]/(PI*pow(feret1[i],2)));
+	setResult("AR feret", i, minferet1[i]/feret1[i]);
+	setResult("Feret d", i, feret1[i]); 
+	setResult("MinFeret d", i, minferet1[i]);
+	setResult("Max. Insc. Circle Diam.", i, incircdiam1[i]);
+	setResult("Orientation", i, orientation1[i]);
+	setResult("ROI Index", i, roiLabel1[i]);
+} 
+
+updateResults();
+split(String.getResultsHeadings);
+print(String.getResultsHeadings);
+String.copyResults;
+particles=String.paste;
+print(particles);
+
+
+Dialog.create("Components");
+Dialog.addMessage("Open components - select any single component image in containing folder");
+Dialog.addCheckbox("Binary images?", 0);
+Dialog.show();
+run("Image Sequence...", "open=[] convert sort"); // Open image stack
+//run("Threshold...");
+binary = Dialog.getCheckbox();
+if (binary==true) 
+	setThreshold(128, 255);
+else setThreshold(0, 254);
+run("Convert to Mask", "method=Default background=Light");
+run("Set Scale...", "distance=&pixelLength known=&knownLength unit=&distanceUnits");
+Dialog.create("Component measurement options");
+Dialog.addNumber("Minimum component area to be measured (in pixels)", 100);
+Dialog.show();
+minCarea = Dialog.getNumber();
+stacks = getTitle();
+selectWindow(sieved);
+close();
+selectWindow(stacks);
+
+print("-------------------------");
+print("	"+"Label	"+"Area	"+"Perim.	"+"CH Area	"+"CH Perim.	"+"Solidity	"+"Convexity	"+"Concavity Index	"+"FormFactor	"+"Circularity	"+"Roundness	"+"AR Feret	"+"Feret d	"+"MinFeret d	"+"Max. Insc. Circle Diam.	"+"Orientation	"+"ROI Index");
+
+imageCalculator("AND create stack", stacks, masks);
+sievedmask=getTitle();
+run("Analyze Particles...", "size=minCarea-Infinity pixel show=Masks stack");
+stacksieved = getTitle();
+selectWindow(masks);
+close();
+selectWindow(stacks);
+close();
+selectWindow(sievedmask);
+close();
+selectWindow(stacksieved);
+
+m = roiManager ("count");
+for (j=0; j<m; j++) { 
+	roiManager("select", j);
+	index = roiManager("index");
+	roiManager("Rename",index+1);
+	wait(10);
+	roiLabel=selectionName;
+	
+   	run("Duplicate...", "title=NewStack duplicate");
+	setBackgroundColor(0, 0, 0);
+	run("Clear Outside", "stack");
+	run("Invert", "stack");
+	run("Clear Results"); 
+	run("Shape Filter", "area=0-Infinity area_convex_hull=0-Infinity perimeter=0-Infinity perimeter_convex_hull=0-Infinity feret_diameter=0-Infinity min._feret_diameter=0-Infinity max._inscr._circle_diameter=0-Infinity area_eq._circle_diameter=0-Infinity long_side_min._bounding_rect.=0-Infinity short_side_min._bounding_rect.=0-Infinity aspect_ratio=1-Infinity area_to_perimeter_ratio=0-Infinity circularity=0-Infinity elongation=0-1 convexity=0-1 solidity=0-1 num._of_holes=0-Infinity thinnes_ratio=0-1 contour_temperatur=0-1 orientation=0-180 fractal_box_dimension=0-2 option->box-sizes=2,3,4,6,8,12,16,32,64 draw_holes fill_results_table stack");  
+		
+	n = nResults;  
+	label1 = newArray(n);
+	area1 = newArray(n); 
+	length1 = newArray(n); 
+	area2 = newArray(n);
+	length2 = newArray(n); 
+	ff1 = newArray(n);
+	feret1 = newArray(n);
+	minferet1 = newArray(n);
+	incircdiam1 = newArray(n);
+	orientation1 = newArray(n);
+
+	for (i = 0; i<n; i++) {
+		label1[i] = getResult('Frame', i);
+		orientation1[i] = getResult('Orientation', i); 
+		length1[i] = getResult('Peri.', i);
+		area1[i] = getResult('Area', i);
+		area2[i] = getResult('Area Conv. Hull', i);
+		length2[i] = getResult('Peri. Conv. Hull', i);
+		ff1[i] = getResult('Thinnes Rt.', i);
+		feret1[i] = getResult('Feret', i); 
+		minferet1[i] = getResult('Min. Feret', i);
+		incircdiam1[i] = getResult('Maximum inscriped circle diameter', i);
+	}	
+	close();
+	
+	selectWindow(stacksieved);	
+	run("Clear Results");
+	for (i = 0; i<n; i++) { 
+		setResult("Slice", i, label1[i]);
+		setResult("Area", i, area1[i]); 
+		setResult("Perim.", i, length1[i]); 
+		setResult("CH Area", i, area2[i]); 
+		setResult("CH Perim.", i, length2[i]); 
+		setResult("Solidity", i, area1[i]/area2[i]); 
+		setResult("Convexity", i, length2[i]/length1[i]); 
+		setResult("Concavity Index", i, sqrt((pow(1-(area1[i]/area2[i]),2)+(pow(1-(length2[i]/length1[i]),2))))); 
+		setResult("FormFactor", i, ff1[i]);
+		setResult("Circularity", i, length1[i]/(2*sqrt(PI*area1[i])));
+		setResult("Roundness", i, 4*area1[i]/(PI*pow(feret1[i],2)));
+		setResult("AR feret", i, minferet1[i]/feret1[i]);
+		setResult("Feret d", i, feret1[i]); 
+		setResult("MinFeret d", i, minferet1[i]);
+		setResult("Max. Insc. Circle Diam.", i, incircdiam1[i]);
+		setResult("Orientation", i, orientation1[i]);
+		setResult("ROI Index", i, roiLabel);
+	}
+
+	updateResults();
+	if(n==0) {
+	print(roiLabel+"	"+"nothing to measure	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+"-	"+roiLabel);	
+	}
+	else {
+	String.copyResults;  // The problem with running the macro over multiple ROIs is that the results table must be cleared after every ROI.
+	roiResults = String.paste; // The solution I found was to copy and paste the results into the Log after every ROI was measured.
+	print(roiResults);
+	}
+	selectWindow(stacksieved);
+}
+
+selectWindow ("Log");
+saveAs("text")
