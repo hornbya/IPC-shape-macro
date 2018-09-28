@@ -1,3 +1,5 @@
+https://zenodo.org/badge/DOI/10.5281/zenodo.1438433.svg
+
 # IPC-shape-macro
 ImageJ macro to measure the size and shape parameters of particles and multiple components within particles
 
