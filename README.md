@@ -15,7 +15,8 @@ If the original image and phase stack images are not binary when uploaded, the m
 OUTPUTS: CSV text file containing following parameters for particles and one or multiple components:
 Label(slice), Area, Perimeter, Convex hull (CH) area, Convex hull (CH) perimeter, Solidity, Convexity, Concavity Index, Form Factor, Circularity, Roundness, Axial ratio (Feret), Feret diameter, Minimum Feret diameter, Maximum inscribed circle diameter, orientation and ROI Index.
 
-ACKNOWLEDGEMENTS: The macro calls on the Shape Filter ImageJ plugin (https://doi.org/10.5281/zenodo.57880) based on IJBlob, which is described in Wagner, T and Lipinski, H 2013. IJBlob: An ImageJ Library for Connected Component Analysis and Shape Analysis. Journal of Open Research Software 1(1):e6, 
+ACKNOWLEDGEMENTS: This project has received funding from the European Union's Horizon 2020 research and innovation programme.
+The macro calls on the Shape Filter ImageJ plugin (https://doi.org/10.5281/zenodo.57880) based on IJBlob, which is described in Wagner, T and Lipinski, H 2013. IJBlob: An ImageJ Library for Connected Component Analysis and Shape Analysis. Journal of Open Research Software 1(1):e6, 
 The plugin description is available from https://imagej.net/Shape_Filter and is freely and openly available by subscribing to the Biomedgroup update site in ImageJ (see https://imagej.net/Update_Sites)
 
 This macro also incorporates shape parameters described in Liu, E.J., et al (2015). Optimising Shape Analysis to quantify volcanic ash morphology. GeoResJ, https://doi.org/10.1016/j.grj.2015.09.001 and code from shape macro, with kind permission from Emma Liu.
